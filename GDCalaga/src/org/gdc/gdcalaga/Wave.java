@@ -1,5 +1,4 @@
 package org.gdc.gdcalaga;
-import java.lang.*;
 import java.util.*;
 import org.newdawn.slick.Graphics;
 
