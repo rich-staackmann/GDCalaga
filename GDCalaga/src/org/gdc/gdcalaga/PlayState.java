@@ -1,7 +1,6 @@
 package org.gdc.gdcalaga;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.gdc.gdcalaga.audio.AudioAsset;
 import org.gdc.gdcalaga.audio.AudioManager;
 import org.newdawn.slick.GameContainer;
@@ -10,6 +9,7 @@ import org.newdawn.slick.Input;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
+import org.newdawn.slick.geom.Vector2f;
 
 public class PlayState extends BasicGameState {
 	public static final int ID = 0;
@@ -29,7 +29,8 @@ public class PlayState extends BasicGameState {
     @Override
 	public void init(GameContainer container, StateBasedGame game) throws SlickException {
         input = container.getInput();
-        player= new Player(entities,50,300);
+        Vector2f startPosition = new Vector2f(50, 300);
+        player= new Player(entities, startPosition);
         
         audioManager.loadAudioAssets();
         audioManager.playMusic(AudioAsset.MUSIC_LEVEL_1);
@@ -46,7 +47,27 @@ public class PlayState extends BasicGameState {
         	obj.draw(g);
         }
 		entities.draw(g);
-        g.drawString("Player HP: " + player.getHealth() + "        Round " + Spawn.getWave() + "        Points " + Player.getTotalPoints(), 5, 30);
+		
+		/* If we use this same monospace font, each letter takes up 10 pixels
+		 * so we can space the text according to this metric
+		 */
+		final int desiredSpacing = 15;    //Spacing in pixels between each statistic
+		
+		String playerHP = new String("Player HP: " + player.getHealth());
+		int xPixel = 5;
+        g.drawString(playerHP, xPixel, 30);
+        
+        String shieldsLeft = new String("Player Shields: " + player.getShields()/1000.0);
+        xPixel += (playerHP.length() * 10) + desiredSpacing;
+        g.drawString(shieldsLeft, xPixel, 30);
+        
+        String waveCount = new String("Round: " + Spawn.getWave());
+        xPixel += (shieldsLeft.length() * 10) + desiredSpacing;
+        g.drawString(waveCount, xPixel, 30);
+        
+        String pointCount = new String("Points " + Player.getTotalPoints());
+        xPixel += (waveCount.length() * 10) + desiredSpacing;
+        g.drawString(pointCount, xPixel, 30);
 	}
 
 	@Override
@@ -78,10 +99,25 @@ public class PlayState extends BasicGameState {
                 player.moveRight(delta);
             }
             
-            if(input.isKeyPressed(Input.KEY_SPACE))
+            if(input.isKeyDown(Input.KEY_SPACE))
             {
-                player.fire();
-                audioManager.playSFX(AudioAsset.SFX_FIRE1);
+                if (player.fire(delta))
+                {
+                    audioManager.playSFX(AudioAsset.SFX_FIRE1);
+                }
+            }
+            
+            if(input.isKeyDown(Input.KEY_Z))
+            {
+                if (player.activateShield(delta))
+                {
+                    //audioManager.playSFX(AudioAsset.SFX_SHIELD1);
+                    //should we play a sound, or just show a graphic?
+                }
+            }
+            else
+            {
+                player.deactivateShield();
             }
             
             for (DisplayObject obj : disObjs) {
